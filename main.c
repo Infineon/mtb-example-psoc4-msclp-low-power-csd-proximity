@@ -124,10 +124,6 @@ typedef enum
 static void initialize_capsense(void);
 static void capsense_msc0_isr(void);
 
-#if CY_CAPSENSE_BIST_EN
-static void measure_sensor_capacitance(uint32_t *sensor_capacitance);
-#endif
-
 static void ezi2c_isr(void);
 static void initialize_capsense_tuner(void);
 
@@ -192,8 +188,6 @@ cy_stc_syspm_callback_t deepSleepCb =
         .order          = 2
 };
 
-uint16_t proxDiff;
-uint32_t proxSensorStatus;
 /*******************************************************************************
  * Function Name: main
  ********************************************************************************
@@ -215,13 +209,6 @@ int main(void)
     uint32_t capsense_state_timeout;
     uint32_t interruptStatus;
 
-    #if CY_CAPSENSE_BIST_EN
-    uint32_t sensor_capacitance[CY_CAPSENSE_SENSOR_COUNT];
-    #endif
-    #if ENABLE_RUN_TIME_MEASUREMENT
-    static uint32_t active_processing_time;
-    static uint32_t alr_processing_time;
-    #endif
     /* Initialize the device and board peripherals */
     result = cybsp_init() ;
 
@@ -259,10 +246,6 @@ int main(void)
 
     /* Initialize MSC CAPSENSE&trade; */
     initialize_capsense();
-
-    #if CY_CAPSENSE_BIST_EN
-    measure_sensor_capacitance(sensor_capacitance);
-    #endif
 
     /* Measures the actual ILO frequency and compensate MSCLP wake up timers */
     Cy_CapSense_IloCompensate(&cy_capsense_context);
@@ -302,9 +285,6 @@ int main(void)
                 Cy_SysLib_ExitCriticalSection(interruptStatus);
 
                 Cy_CapSense_ProcessAllWidgets(&cy_capsense_context);
-
-                proxDiff =  cy_capsense_context.ptrWdConfig->ptrSnsContext[CY_CAPSENSE_PROXIMITY0_SNS0_ID].diff;
-                proxSensorStatus = Cy_CapSense_IsProximitySensorActive(CY_CAPSENSE_PROXIMITY0_WDGT_ID, CY_CAPSENSE_PROXIMITY0_SNS0_ID, &cy_capsense_context);
 
                 /* Scan, process and check the status of the all Active mode sensors */
                 if(Cy_CapSense_IsAnyWidgetActive(&cy_capsense_context))
@@ -582,38 +562,6 @@ static void init_sys_tick()
 }
 #endif
 
-#if CY_CAPSENSE_BIST_EN
-/*******************************************************************************
- * Function Name: measure_sensor_capacitance
- ********************************************************************************
- * Summary:
- *  Measure the sensor Capacitance of all sensors configured and stores the values in an array using BIST.
- *  BIST Measurements are taken by Connection connecting ISC to Shield.
- *  It is based on actual application configuration.
- * Parameters:
- *   sensor_capacitance - This array holds the measured sensor capacitance values.
- *                        array values are arranged as regular widget sensors first and
- *                        followed by Low power widget sensors . refer configurator for the
- *                        sensor order.
- *******************************************************************************/
-static void measure_sensor_capacitance(uint32_t *sensor_capacitance)
-{
-    /* For BIST configuration Connecting all Inactive sensor connections (ISC) of CSD sensors to to shield*/
-    Cy_CapSense_SetInactiveElectrodeState(CY_CAPSENSE_SNS_CONNECTION_SHIELD,
-            CY_CAPSENSE_BIST_CSD_GROUP, &cy_capsense_context);
-
-    /*Runs the BIST to measure the sensor capacitance*/
-    Cy_CapSense_RunSelfTest(CY_CAPSENSE_BIST_SNS_CAP_MASK,
-            &cy_capsense_context);
-    Cy_CapSense_RunSelfTest(CY_CAPSENSE_BIST_SHIELD_CAP_MASK,
-            &cy_capsense_context);
-    memcpy(sensor_capacitance,
-            cy_capsense_context.ptrWdConfig->ptrSnsCapacitance,
-            CY_CAPSENSE_SENSOR_COUNT * sizeof(uint32_t));
-}
-
-#endif
-
 #if ENABLE_RUN_TIME_MEASUREMENT
 /*******************************************************************************
  * Function Name: start_runtime_measurement
@@ -648,8 +596,10 @@ static uint32_t stop_runtime_measurement()
 #endif
 
 #if ENABLE_PWM_LED
-uint16_t max_proxDiff = 0;
-
+uint32_t proxSensorStatus;
+uint32_t proxLedBrightness = 0u;
+uint16_t proxMaxRawCount = 0u;
+uint16_t maxDiffCount = 0u;
 /*******************************************************************************
  * Function Name: led_control
  ********************************************************************************
@@ -662,32 +612,31 @@ uint16_t max_proxDiff = 0;
  *******************************************************************************/
 void led_control()
 {
-    if(proxDiff>max_proxDiff && proxSensorStatus != TOUCH_STATE)
-    {
-        max_proxDiff = proxDiff;
-    }
+    /* Both LEDs are turned off when proximity/touch is not detected */
+    Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, 0);
+    Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_OFF);
 
-    if(proxSensorStatus == PROX_STATE)
+    if(Cy_CapSense_IsAnyWidgetActive(&cy_capsense_context))
     {
-        /* LED3 Turns ON and brightness changes based on proximity distance */
-        Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, proxDiff*2);
-        /* LED2 kept OFF when in PROX_STATE */
-        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_OFF);
-    }
-    else if(proxSensorStatus >= TOUCH_STATE)
-    {
-        /* LED2 Turns ON when touch is detected */
-        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_ON);
-    }
-    else
-    {
-        /* Both LEDs are turned off when proximity/touch is not detected */
-        Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, 0);
-        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_OFF);
-    }
+        proxSensorStatus = Cy_CapSense_IsProximitySensorActive(CY_CAPSENSE_PROXIMITY0_WDGT_ID, CY_CAPSENSE_PROXIMITY0_SNS0_ID, &cy_capsense_context);
+        proxMaxRawCount = cy_capsense_tuner.widgetContext[CY_CAPSENSE_PROXIMITY0_WDGT_ID].maxRawCount;
+        maxDiffCount = proxMaxRawCount - cy_capsense_tuner.sensorContext[CY_CAPSENSE_PROXIMITY0_SNS0_ID].bsln;
+        proxLedBrightness = ((uint32_t)(cy_capsense_tuner.sensorContext[CY_CAPSENSE_PROXIMITY0_SNS0_ID].diff*CYBSP_PWM_config.period0)/maxDiffCount);
 
+        if(proxSensorStatus == PROX_STATE)
+        {
+            /* LED3 Turns ON and brightness changes based on proximity distance */
+            Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, proxLedBrightness);
+        }
+        if(proxSensorStatus >= TOUCH_STATE)
+        {
+            /* LED2 Turns ON when touch is detected */
+            Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_ON);
+            /* LED3 Turns ON and brightness changes based on proximity distance */
+            Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, proxLedBrightness);
+        }
+    }
 }
-
 #endif
 
 /*******************************************************************************
