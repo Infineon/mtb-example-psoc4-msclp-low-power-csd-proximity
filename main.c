@@ -44,17 +44,32 @@
 /* Timeout to move from ALR mode to WOT mode if there is no user activity */
 #define ALR_MODE_TIMEOUT_SEC            (5u)
 
-/* Active mode Scan time calculated in us ~= 1056us */
-#define ACTIVE_MODE_FRAME_SCAN_TIME     (1056u)
+#ifdef TARGET_APP_CY8CPROTO_041TP
+/* Active mode Scan time calculated in us ~= 46us */
+#define ACTIVE_MODE_FRAME_SCAN_TIME     (46u)
 
-/* Active mode Processing time in us ~= 25us with Serial LED and Tuner disabled*/
+/* Active mode Processing time in us ~= 23us with LED and Tuner disabled*/
+#define ACTIVE_MODE_PROCESS_TIME        (23u)
+
+/* ALR mode Scan time calculated in us ~= 46us */
+#define ALR_MODE_FRAME_SCAN_TIME     (46u)
+
+/* ALR mode Processing time in us ~= 23us with LED and Tuner disabled*/
+#define ALR_MODE_PROCESS_TIME        (23u)
+
+#else
+/* Active mode Scan time calculated in us ~= 46us */
+#define ACTIVE_MODE_FRAME_SCAN_TIME     (73u)
+
+/* Active mode Processing time in us ~= 25us with LED and Tuner disabled*/
 #define ACTIVE_MODE_PROCESS_TIME        (25u)
 
-/* ALR mode Scan time calculated in us ~= 1056us */
-#define ALR_MODE_FRAME_SCAN_TIME        (1056u)
+/* ALR mode Scan time calculated in us ~= 46us */
+#define ALR_MODE_FRAME_SCAN_TIME     (73u)
 
-/* ALR mode Processing time in us ~= 25us with Serial LED and Tuner disabled*/
-#define ALR_MODE_PROCESS_TIME           (25u)
+/* ALR mode Processing time in us ~= 25us with LED and Tuner disabled*/
+#define ALR_MODE_PROCESS_TIME        (25u)
+#endif
 
 /*******************************************************************************
  * Macros
@@ -208,6 +223,11 @@ int main(void)
     cy_rslt_t result;
     uint32_t capsense_state_timeout;
     uint32_t interruptStatus;
+
+    #if ENABLE_RUN_TIME_MEASUREMENT
+    static uint32_t active_processing_time;
+    static uint32_t alr_processing_time;
+    #endif
 
     /* Initialize the device and board peripherals */
     result = cybsp_init() ;
@@ -528,10 +548,11 @@ static void initialize_capsense_tuner(void)
      * the Tuner or the Bridge Control Panel can read this buffer but you can
      * connect only one tool at a time.
      */
+    #if ENABLE_TUNER
     Cy_SCB_EZI2C_SetBuffer1(CYBSP_EZI2C_HW, (uint8_t *)&cy_capsense_tuner,
             sizeof(cy_capsense_tuner), sizeof(cy_capsense_tuner),
             &ezi2c_context);
-
+    #endif
     Cy_SCB_EZI2C_Enable(CYBSP_EZI2C_HW);
 
 }
@@ -583,7 +604,9 @@ static void start_runtime_measurement()
  *  Returns:
  *  runtime - in microseconds(us)
  *******************************************************************************/
+#endif
 
+#if ENABLE_RUN_TIME_MEASUREMENT
 static uint32_t stop_runtime_measurement()
 {
     uint32_t ticks;
@@ -625,14 +648,14 @@ void led_control()
 
         if(proxSensorStatus == PROX_STATE)
         {
-            /* LED3 Turns ON and brightness changes based on proximity distance */
+            /* LED Turns ON and brightness changes based on proximity distance */
             Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, proxLedBrightness);
         }
-        if(proxSensorStatus >= TOUCH_STATE)
+        else if(proxSensorStatus == TOUCH_STATE)
         {
-            /* LED2 Turns ON when touch is detected */
+            /* LED Turns ON when touch is detected */
             Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_ON);
-            /* LED3 Turns ON and brightness changes based on proximity distance */
+            /* LED Turns ON and brightness changes based on proximity distance */
             Cy_TCPWM_PWM_SetCompare0(CYBSP_PWM_HW, CYBSP_PWM_NUM, proxLedBrightness);
         }
     }

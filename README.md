@@ -1,35 +1,47 @@
-# PSoC&trade; 4: MSCLP low-power proximity
+# PSOC&trade; 4: MSCLP low-power proximity
 
-This code example demonstrates an implementation of a low-power proximity sensing application for maximum proximity sensing at the longest distance to detect a target (a hand). It includes recommended power states and transitions, adjustments for tuning parameters, and the method of tuning. This example uses a proximity widget in multi-sense CAPSENSE&trade; low-power (MSCLP - 5th-generation low-power CAPSENSE&trade;) to demonstrate different considerations for implementing a low-power design.
-
-This document also explains how to manually tune the low-power widget for optimum performance and the longest distance according to parameters such as power consumption and response time using the CSD-RM sensing technique and CAPSENSE&trade; Tuner.
+This code example demonstrates an implementation of a low power proximity-sensing application to detect a target (a hand) at a distance. It demonstrates recommended tuning techniques for maximizing proximity sensing range, power consumption and response time. This example uses a 5th-generation low-power CAPSENSE™ (MSCLP) proximity widget, implemented on a PSOC™ 4 based kit.
 
 [View this README on GitHub.](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-proximity)
 
-[Provide feedback on this code example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzg4ODIiLCJTcGVjIE51bWJlciI6IjAwMi0zODg4MiIsIkRvYyBUaXRsZSI6IlBTb0MmdHJhZGU7IDQ6IE1TQ0xQIGxvdy1wb3dlciBwcm94aW1pdHkiLCJyaWQiOiJzaWRoYXJ0aGEiLCJEb2MgdmVyc2lvbiI6IjIuMC4wIiwiRG9jIExhbmd1YWdlIjoiRW5nbGlzaCIsIkRvYyBEaXZpc2lvbiI6Ik1DRCIsIkRvYyBCVSI6IklDVyIsIkRvYyBGYW1pbHkiOiJQU09DIn0=)
+[Provide feedback on this code example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzg4ODIiLCJTcGVjIE51bWJlciI6IjAwMi0zODg4MiIsIkRvYyBUaXRsZSI6IlBTT0MmdHJhZGU7IDQ6IE1TQ0xQIGxvdy1wb3dlciBwcm94aW1pdHkiLCJyaWQiOiJsdWNreWwiLCJEb2MgdmVyc2lvbiI6IjQuMC4wIiwiRG9jIExhbmd1YWdlIjoiRW5nbGlzaCIsIkRvYyBEaXZpc2lvbiI6Ik1DRCIsIkRvYyBCVSI6IklDVyIsIkRvYyBGYW1pbHkiOiJQU09DIn0=)
 
 
 ## Requirements
 
-- [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) v3.2 or later (tested with v3.2)
-- Board support package (BSP) minimum required version: 3.2.0
+- [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) v3.5 or later 
+- Board support package (BSP) minimum required version: 3.3.0
 - Programming language: C
-- Associated parts: [PSoC&trade; 4000T](https://www.infineon.com/002-33949)
+- Associated parts: [PSOC&trade; 4000T](https://www.infineon.com/002-33949), [PSOC&trade; 4100T Plus](https://www.infineon.com/002-39671)
 
 ## Supported toolchains (make variable 'TOOLCHAIN')
 
 - GNU Arm&reg; Embedded Compiler v11.3.1 (`GCC_ARM`) – Default value of `TOOLCHAIN`
-- Arm&reg; Compiler v6.16 (`ARM`)
-- IAR C/C++ Compiler v9.30.1 (`IAR`)
+- Arm&reg; Compiler v6.22 (`ARM`)
+- IAR C/C++ Compiler v9.50.2 (`IAR`)
 
 ## Supported kits (make variable 'TARGET')
 
 
-- [PSoC&trade; 4000T CAPSENSE&trade; Prototyping Kit](https://www.infineon.com/CY8CPROTO-040T) (`CY8CPROTO-040T`) – Default value of `TARGET`
+- [PSOC&trade; 4000T CAPSENSE&trade; Prototyping Kit](https://www.infineon.com/CY8CPROTO-040T) (`CY8CPROTO-040T`) – Default value of `TARGET`
+- [PSOC&trade; 4100T Plus CAPSENSE&trade; Prototyping Kit](https://www.infineon.com/CY8CPROTO-041TP) (`CY8CPROTO-041TP`)
 
 ## Hardware setup
 
-This example uses the board's default configuration. See the [kit user guide](https://www.infineon.com/002-38600) to ensure that the board is configured correctly to use VDD at 5 V.
+This example uses the board's default configuration. See the kit user guide to configure the required operating voltage on the kit and to setup the VDDA supply voltage refer to section [Set up the VDDA supply voltage and debug mode in Device Configurator](#set-up-the-vdda-supply-voltage-and-debug-mode-in-device-configurator).
+
+This application is tuned to perform optimally at the default voltage. However, you can observe the basic functionality at other supported voltages.
+
+**Table 1. Kit user guide and supported voltages**
+
+Kit | User guide  | 1.8 V | 3.3 V | 5 V
+:-------- |:----------- |:----------- |:----- |:-----
+[CY8CPROTO-040T](https://www.infineon.com/CY8CPROTO-040T) | [PSOC&trade; 4000T CAPSENSE&trade; Prototyping Kit guide](https://www.infineon.com/002-38600) | Yes | Yes | Yes*
+[CY8CPROTO-041TP](https://www.infineon.com/CY8CPROTO-041TP) | [PSOC&trade; 4100T Plus CAPSENSE&trade; Prototyping Kit guide](https://www.infineon.com/002-40273) | Yes | Yes | Yes*
+
+Yes* - Kit default operating voltage
+
+   
 
 ## Software setup
 
@@ -53,17 +65,17 @@ The ModusToolbox&trade; tools package provides the Project Creator as both a GUI
 
 2. On the **Choose Board Support Package (BSP)** page, select a kit supported by this code example. See [Supported kits](#supported-kits-make-variable-target).
 
-    **Note:** To use this code example for a kit not listed here, you may need to update the source files. If the kit does not have the required resources, the application may not work.
+   > **Note:** To use this code example for a kit not listed here, you may need to update the source files. If the kit does not have the required resources, the application may not work.
 
 3. On the **Select Application** page:
 
    a. Select the **Applications(s) Root Path** and the **Target IDE**.
 
-    **Note:** Depending on how you open the Project Creator tool, these fields may be pre-selected for you.
+   > **Note:** Depending on how you open the Project Creator tool, these fields may be pre-selected for you.
 
    b.	Select this code example from the list by enabling its check box.
 
-    **Note:** You can narrow the list of displayed examples by typing in the filter box.
+   > **Note:** You can narrow the list of displayed examples by typing in the filter box.
 
    c. (Optional) Change the suggested **New Application Name** and **New BSP Name**.
 
@@ -77,7 +89,7 @@ The 'project-creator-cli' tool can be used to create applications from a CLI ter
 
 Use a CLI terminal to invoke the 'project-creator-cli' tool. On Windows, use the command-line 'modus-shell' program provided in the ModusToolbox&trade; installation instead of a standard Windows command-line application. This shell provides access to all ModusToolbox&trade; tools. You can access it by typing "modus-shell" in the search box in the Windows menu. In Linux and macOS, you can use any terminal application.
 
-The following example clones the "[mtb-example-psoc4-msclp-low-power-csd-proximity](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-proximity)" application with the desired name "MSCLP_Low_Power_Proximity" configured for the *CY8CPROTO-040T* BSP into the specified working directory, *C:/mtb_projects*:
+The following example clones the "mtb-example-psoc4-msclp-low-power-csd-proximity" application with the desired name "MSCLP_Low_Power_Proximity" configured for the *CY8CPROTO-040T* BSP into the specified working directory, *C:/mtb_projects*:
 
    ```
    project-creator-cli --board-id CY8CPROTO-040T --app-id mtb-example-psoc4-msclp-low-power-csd-proximity --user-app-name MSCLP_Low_Power_Proximity --target-dir "C:/mtb_projects"
@@ -93,7 +105,7 @@ Argument | Description | Required/optional
 `--target-dir`| Specify the directory in which the application is to be created if you prefer not to use the default current working directory | Optional
 `--user-app-name`| Specify the name of the application if you prefer to have a name other than the example's default name | Optional
 
- **Note:** The project-creator-cli tool uses the `git clone` and `make getlibs` commands to fetch the repository and import the required libraries. For details, see the "Project creator tools" section of the [ModusToolbox&trade; tools package user guide](https://www.infineon.com/ModusToolboxUserGuide) (locally available at {ModusToolbox&trade; install directory}/docs_{version}/mtb_user_guide.pdf).
+> **Note:** The project-creator-cli tool uses the `git clone` and `make getlibs` commands to fetch the repository and import the required libraries. For details, see the "Project creator tools" section of the [ModusToolbox&trade; tools package user guide](https://www.infineon.com/ModusToolboxUserGuide) (locally available at {ModusToolbox&trade; install directory}/docs_{version}/mtb_user_guide.pdf).
 
 </details>
 
@@ -152,11 +164,7 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
 
 ## Operation
 
-1. Connect the board to your PC using the provided Micro-B USB cable through the KitProg3 USB connector as shown in  **Figure 1**.
-
-   **Figure 1. Connecting the CY8CPROTO-040T kit with the PC**
-
-   <img src="images/proto_kit.jpg" alt="Figure 1" width="350"/>
+1. Connect the board to your PC using a USB cable through the KitProg3 USB connector.
 
 2. Program the board using one of the following:
 
@@ -189,32 +197,31 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
 
 3. After programming, the application starts automatically.
 
-    **Note:** After programming, you see the following error message if debug mode is disabled. This can be ignored or enabling the debug mode will solve this error.
+   > **Note:** After programming, you may see the following error message if debug mode is disabled, see Table 11 for the default debug configuration in the supported kits. Ignore the error or enable the debug mode to solve this error.
 
    ``` c
    "Error: Error connecting Dp: Cannot read IDR"
    ```
 
-4. To test the application, hover a hand on top of the CAPSENSE&trade; proximity sensor and notice that LED2 turn ON and turn OFF when the hand is moved away. The LED2 brightness changes based on hand distance. In this case, the maximum distance the proximity sensor can sense an object is 40 mm.
+4. To test the application, hover a hand over the CAPSENSE&trade; proximity sensor and observe that the LED turns ON (refer **Table 2**) when the hand is within the proximity range and turns OFF when it is out of the proximity range. The LED brightness changes based on the distance of the hand.<br>
+The sensor can also detect a touch. When you touch the sensor (outer loop), the LED turns ON and turns OFF when the touch is removed.
 
-   The sensor can also detect a touch. When you touch the sensor (outer loop) the LED3 turn ON and turn OFF when you remove the touch.
-
-   Note that the proximity sensor detects objects from all directions. Implementing directional proximity sensing in an end system presents a significant challenge due to its dependence on various factors, including the overall enclosure design, hardware components, and PCB layout. To achieve directional sensitivity in proximity sensors, position a ground plane at the bottom to reduce sensitivity from below. Because the ground plane can decrease sensitivity, it must be placed with some separation from the shield below the proximity sensor. The optimal distance varies based on different system factors and necessitates testing on the actual system to determine the best distance.   
+   Note that the proximity sensor detects objects from all directions. Implementing directional proximity sensing in an end system presents a significant challenge due to its dependency on various factors, including the overall enclosure design, hardware components, and PCB layout. To achieve directional sensitivity in proximity sensors, position a ground plane at the bottom to reduce sensitivity from below. The ground plane must be placed with some separation from the shield below the proximity sensor as it decreases the sensitivity. The optimal distance varies based on different system factors and necessitates testing on the actual system to determine the best distance.   
 
 
-   **Figure 2. LED2 turn ON after hovering the hand on top of the sensor**
+   **Figure 1. Hovering the hand on top of the sensor**
 
-   <img src="images/prox_hand_detect.jpg" alt="Figure 2" width="400"/>
+   <img src="images/prox_hand_detect.jpg" alt="Figure 1" width="400"/>
 
    <br>
 
-   **Table 1. LED indications for proximity and touch detection**
+   **Table 2. LED indications and maximum distance of the proximity sensor**
 
-   Scenario  | LED  | Status  
+   Scenario  | CY8CPROTO-040T | CY8CPROTO-041TP 
    :------------------| :-----| :-----
-   Hand in proximity  | LED2 |ON (brightness changes based on hand distance)  
-   Touch  | LED3 | ON
-   
+   Hand in proximity  | LED2 | LED3 | 
+   Touch  | LED3 | LED2 | ON
+   Distance(mm) | ~ 40 |  ~ 40
    <br> 
 
 ### Monitor data using the Tuner Application
@@ -223,91 +230,82 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
 
    You can also run the CAPSENSE&trade; Tuner application in standalone mode from *{ModusToolbox&trade; install directory}/ModusToolbox/tools_{version}/capsense-configurator/capsense-tuner*. In this case, after opening the application, select **File** > **Open** and open the *design.cycapsense* file of the respective application, which is present in the *{Application root directory}/bsps/TARGET_APP_\<BSP-NAME>/COMPONENT_BSP_DESIGN_MODUS/* folder.
 
-   See the [ModusToolbox&trade; user guide](https://www.infineon.com/ModusToolboxUserGuide) (locally available at *{ModusToolbox&trade; install directory}/docs_{version}/mtb_user_guide.pdf*)for options to open the CAPSENSE&trade; Tuner application using the CLI.
+   See the [ModusToolbox&trade; user guide](https://www.infineon.com/ModusToolboxUserGuide) (locally available at *{ModusToolbox&trade; install directory}/docs_{version}/mtb_user_guide.pdf*) for options to open the CAPSENSE&trade; Tuner application using the CLI.
 
-2. Ensure the kit is in CMSIS-DAP bulk mode (KitProg3 status LED is ON and not blinking). See [Firmware-loader](https://github.com/Infineon/Firmware-loader) to learn how to update the firmware and switch modes in KitProg3.
+2. Ensure that the kit is in CMSIS-DAP bulk mode (KitProg3 status LED is ON and not blinking). See [Firmware-loader](https://github.com/Infineon/Firmware-loader) to learn how to update the firmware and switch modes in KitProg3.
 
-3. In the tuner application, click on the **Tuner Communication Setup** icon or select **Tools** > **Tuner Communication Setup**. In the window, select I2C under KitProg3 and configure as follows:
+3. In Tuner Application, click on the **Tuner Communication Setup** icon or select **Tools** > **Tuner Communication Setup**. 
 
-   - **I2C address:** 8
-   - **Sub-address:** 2-Bytes
-   - **Speed (kHz):** 400
+4. In the **Tuner Communication Setup** window, select **I2C** under **KitProg3** and configure as follows:
+
+	- **I2C address:** 8
+	- **Sub-address:** 2-Bytes
+	- **Speed (kHz):** 400
 
    These are the same values set in the EZI2C resource.
 
-   **Figure 3. Tuner Communication Setup parameters**
+   **Figure 2. Tuner Communication Setup parameters**
 
-   <img src="images/tuner-comm-setup.png" alt="Figure 3" width="300"/>
+   <img src="images/tuner-comm-setup.png" alt="Figure 2" width="600"/>
 
-4. Click **Connect** or select **Communication** > **Connect** to establish a connection.
+5. Click **Connect** or select **Communication** > **Connect** to establish a connection.
 
-   **Figure 4. Establish connection**
+   **Figure 3. Establish connection**
 
-   <img src="images/tuner-connect.png" alt="Figure 4" width="300" />
+   <img src="images/tuner-connect.png" alt="Figure 3" width="400" />
 
-5. Click **Start** or select **Communication** > **Start** to start data streaming from the device.
+6. Click **Start** or select **Communication** > **Start** to start data streaming from the device.
 
-   **Figure 5. Start tuner communication**
+   **Figure 4. Start tuner communication**
 
-   <img src="images/tuner-start.png" alt="Figure 5" width="300" />
+   <img src="images/tuner-start.png" alt="Figure 4" width="400" />
 
-   The **Widget/Sensor Parameters** tab is updated with the parameters configured in the CAPSENSE&trade; Configurator window. The tuner displays the data from the sensor in the **Widget View** and **Graph View** tabs.
+   The **Widget/Sensor Parameters** tab is updated with the parameters configured in the **CAPSENSE&trade; Configurator** window. The tuner displays the data from the sensor in the **Widget View** and **Graph View** tabs.
 
-6. Set the **Read mode** to **Synchronized** mode. Navigate to the **Widget View** tab and observe that the **Proximity0** widget is highlighted in blue color when you touch it.
+7. Set the **Read mode** to **Synchronized** mode. Navigate to the **Widget View** tab and observe that the **Proximity0** widget is highlighted in blue color when you touch it.
 
-   **Figure 6. Widget view of the CAPSENSE&trade; Tuner**
+   **Figure 5. Widget view of the CAPSENSE&trade; Tuner**
 
-   <img src="images/tuner-widget-view.png" alt="Figure 6" width=""/>
+   <img src="images/tuner-widget-view.png" alt="Figure 5" width="800"/>
 
-7. Go to the **Graph View** tab to view the raw count, baseline, difference count, and status for each sensor. Observe that the low-power widget sensor's (**LowPower0_Sns0**) raw count is plotted after the device completes a full-frame scan (or detects a touch) in **WOT** mode and moves to **Active/ALR** mode.
+8. Go to the **Graph View** tab to view the raw count, baseline, difference count, and status for each sensor. Observe that the low-power widget sensor's (**LowPower0_Sns0**) raw count is plotted after the device completes a full-frame scan (or detects a touch) in **WOT** mode and moves to **Active/ALR** mode.
 
-   **Figure 7. Graph view of the CAPSENSE&trade; Tuner**
+   **Figure 6. Graph view of the CAPSENSE&trade; Tuner**
 
-   <img src="images/tuner-graph-view-intro.png" alt="Figure 7" width=""/>
+   <img src="images/tuner-graph-view-intro.png" alt="Figure 6" width="800"/>
 
-8. See the **Widget/Sensor parameters** section in the CAPSENSE&trade; Tuner window as shown in **Figure 7**.
+9. See the **Widget/Sensor parameters** section in the CAPSENSE&trade; Tuner window as shown in **Figure 6**.
 
-9. Switch to the **SNR Measurement** tab for measuring the SNR and verify that the SNR is above 5:1 and the signal count is above 50; select the **Proximity0** and **Proximity0_Sns0** sensors, and then click **Acquire Noise** as shown in **Figure 8**.
+10. Switch to the **SNR Measurement** tab and verify that the SNR is above 5:1 and the signal count is above 50.
 
-    **Figure 8. CAPSENSE&trade; Tuner - SNR measurement: Acquire noise**
+11. Select the **Proximity0** and **Proximity0_Sns0** sensors, and then click **Acquire Noise** as shown in **Figure 7**.
+	> **Note:** Because the scan refresh rate is lower in **ALR** mode, it takes more time to acquire noise. Touch the CAPSENSE&trade; proximity loop once before clicking **Acquire Noise** to transition the device to **ACTIVE** mode to complete the measurement faster.
 
-    <img src="images/tuner-acquire-noise.png" alt="Figure 8" width=""/>
+    **Figure 7. CAPSENSE&trade; Tuner - SNR measurement: Acquire noise**
 
-      **Note:** Because the scan refresh rate is lower in **ALR** mode, it takes more time to acquire noise. Touch the CAPSENSE&trade; proximity loop once before clicking **Acquire Noise** to transition the device to **ACTIVE** mode to complete the measurement faster.
+    <img src="images/tuner-acquire-noise.png" alt="Figure 7" width="800"/>
 
-10. After noise is acquired, bring your hand near the proximity loop at a distance of around **40 mm** above it and then click **Acquire Signal**. Ensure that the hand remains above the proximity loop as long as the signal acquisition is in progress. Observe that the SNR is above 5:1 and the signal count is above 50. If not, repeat signal acquisition by lowering the hand, and therefore, getting a higher signal.
+12. To acquire the signal, bring your hand near the proximity loop at the proximity detection distance (mentioned in **Table 2**),  and then click **Acquire Signal**.
+    Ensure that:
+	- The hand remains above the proximity loop as long as the signal acquisition is in progress. 
+	-  Check if the SNR is above 5:1 and the signal count is above 50. If not, repeat signal acquisition by lowering the hand, and therefore, getting a higher signal.
 
-    The maximum distance the proximity loop can sense is when the SNR is greater than 5:1 for a particular configuration. [Tuning procedure](#tuning-procedure) section explains how changing the configuration affects the distance and SNR.
+    > **Note:** The maximum distance the proximity loop can sense is when the SNR is greater than 5:1 for a particular configuration. [Tuning procedure](#tuning-procedure) section explains how changing the configuration affects the distance and SNR.
 
-    The calculated SNR on this proximity widget is displayed, as **Figure 9** shows.
+    The calculated SNR on this proximity widget is displayed, as **Figure 8** shows.
 
-    **Figure 9. CAPSENSE&trade; Tuner - SNR measurement: Acquire signal**
+    **Figure 8. CAPSENSE&trade; Tuner - SNR measurement: Acquire signal**
 
-    <img src="images/tuner-acquire-signal.png" alt="Figure 9" width="750"/>
+    <img src="images/tuner-acquire-signal.png" alt="Figure 8" width="800"/>
 
-11. To tune the low-power widget, see the **Tuning flow** section of the code example [PSoC&trade; 4: MSCLP low-power CSD button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button).
-
-**Note :** Refer to the [PSoC&trade; 4: MSCLP low-power CSD button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button) to observe the power state transitions, indicated by changing the blinking rate of a LED.
-The Code Example also explains the scan time and process time measurements.
-
-### Current consumption
-
-Follow the instructions in the **Measure current at different power modes** section of the code example [PSoC&trade; 4: MSCLP low-power CSD button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button) to measure the current consumption.
-
-## Operation at other voltages
-
-[CY8CPROTO-040T kit](https://www.infineon.com/CY8CPROTO-040T) supports operating voltages of 1.8 V, 3.3 V, and 5 V. See the [kit user guide](https://www.infineon.com/002-38600) to set the preferred operating voltage and see the [Set up the VDDA supply voltage and debug mode in Device Configurator](#set-up-the-vdda-supply-voltage-and-debug-mode-in-device-configurator) section.
-
-This application functionalities are optimally tuned for 5 V. However, you can observe the basic functionalities working across other voltages.
-
-It is recommended to tune the application with the preferred voltages for better performance.
+	> **Note:**  Refer to PSOC&trade; 4: MSCLP low-power CSD button CE to observe the power state transitions.Measure current at different power modes section. The Code Example also explains the scan time and process time measurements.
 
 ## Tuning procedure
 
 
 <details><summary><b> Create custom BSP for your board </b></summary>
 
-1. Create a custom BSP for your board with any device by following the steps given in [ModusToolbox&trade; BSP Assistant user guide](https://www.infineon.com/ModusToolboxBSPAssistant). This code example is created for the CY8C4046LQI-T452 device.
+1. Create a custom BSP for your board with any device by following the steps given in [ModusToolbox&trade; BSP Assistant user guide](https://www.infineon.com/ModusToolboxBSPAssistant). 
 
 2. Open the *design.modus* file from the *{Application root directory}/bsps/TARGET_APP_\<BSP-NAME>/config/* folder obtained in the previous step and enable CAPSENSE&trade; to get the *design.cycapsense* file. CAPSENSE&trade; configuration can be started from scratch as follows:
 
@@ -316,15 +314,15 @@ It is recommended to tune the application with the preferred voltages for better
 
 The following steps explain the tuning procedure for the proximity loop and the low-power widget.
 
- **Note:** See the "Manual Tuning" section in the [AN92239 - Proximity sensing with CAPSENSE&trade;](https://www.infineon.com/AN92239) to learn about the considerations for selecting each parameter values. In addition, see the "Low-power widget parameters" section in the [AN234231 - Achieving lowest-power capacitive sensing with PSoC&trade; 4000T](https://www.infineon.com/AN234231) to learn about the considerations for parameter values specific to low-power widgets.
+ **Note:** See the "Manual Tuning" section in the [AN92239 - Proximity sensing with CAPSENSE&trade;](https://www.infineon.com/AN92239) to learn about the considerations for selecting each parameter values. In addition, see the "Low-power widget parameters" section in the [AN234231 - PSoC™ 4 CAPSENSE™ ultra-low-power capacitive sensing techniques](https://www.infineon.com/AN234231) to learn about the considerations for each parameter values specific to low-power widgets.
 
-The tuning flow of the proximity widget is shown in **Figure 10**.
+The tuning flow of the proximity widget is shown in **Figure 9**.
 
-**Figure 10. Proximity widget tuning flow**
+**Figure 9. Proximity widget tuning flow**
 
-   <img src="images/proximity-tuning-flow.png" alt="Figure 10" width="500"/>
+   <img src="images/proximity-tuning-flow.png" alt="Figure 9" width="500"/>
 
-To tune the low-power widget, see the **Tuning flow** section of the code example [PSoC&trade; 4: MSCLP low-power CSD button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button).
+To tune the low-power widget, see the **Tuning flow** section of the code example PSOC&trade; 4: MSCLP low-power CSD button.
 
 Do the following to tune the proximity widget:
 
@@ -332,30 +330,36 @@ Do the following to tune the proximity widget:
 
 - [Stage 2: Set sense clock frequency](#stage-2-set-sense-clock-frequency)
 
-- [Stage 3: Fine-tune for required SNR, power, and refresh rate](#stage-3-fine-tune-for-required-snr-power-and-refresh-rate)
+- [Stage 3: Measure sensor capacitance to set CDAC tuning mode](#stage-3-measure-sensor-capacitance-to-set-cdac-tuning-mode)
 
-- [Stage 4: Tune threshold parameters](#stage-4-tune-threshold-parameters)
+- [Stage 4: Fine-tune for required SNR, power, and refresh rate](#stage-4-fine-tune-for-required-snr-power-and-refresh-rate)
+
+- [Stage 5: Tune threshold parameters](#stage-5-tune-threshold-parameters)
 
 ### Stage 1: Set initial hardware parameters
 -------------------------
 
-1. Connect the board to the PC using the provided USB cable through the KitProg3 USB connector.
+1. Connect the board to the PC using a USB cable through the KitProg3 USB connector.
 
 2. Launch the Device Configurator tool.
 
-   You can launch the Device Configurator in Eclipse IDE for ModusToolbox&trade; from the **Tools** section in the IDE **Quick Panel** or in standalone mode from *{ModusToolbox&trade; install directory}/ModusToolbox/tools_{version}/device-configurator/device-configurator*. In this case, after opening the application, select **File** > **Open** and open the *design.modus* file of the respective application located in the *{Application root directory}/bsps/TARGET_APP_\<BSP-NAME>/COMPONENT_BSP_DESIGN_MODUS* folder.
+   Launch the CAPSENSE™ Configurator tool in Eclipse IDE for ModusToolbox™ from the CAPSENSE™ peripheral setting in the Device Configurator or directly from the BSP Configurators section in the IDE Quick Panel.
 
-3. Enable CAPSENSE&trade; channel in Device Configurator as shown in **Figure 11**.
+   Or
 
-   **Figure 11. Enable CAPSENSE&trade; in Device Configurator**
+   Launch it in standalone mode from {ModusToolbox™ install directory}/ModusToolbox™/tools_{version}/capsense-configurator/capsense-configurator. In this case, after opening the application, select **File** > **Open** and open the design.cycapsense file of the respective application, which is present in the {Application root directory}/bsps/TARGET_APP_\<BSP-NAME>/COMPONENT_BSP_DESIGN_MODUS folder.
 
-   <img src="images/device-configurator.png" alt="Figure 11"/>
+3. Enable CAPSENSE&trade; channel in Device Configurator as shown in **Figure 10**.
+
+   **Figure 10. Enable CAPSENSE&trade; in Device Configurator**
+
+   <img src="images/device-configurator.png" alt="Figure 10" width="800"/>
 
    Save the changes and close the window.
 
 4. Launch the CAPSENSE&trade; Configurator tool.
 
-   You can launch the CAPSENSE&trade; Configurator tool in Eclipse IDE for ModusToolbox&trade; from the CAPSENSE&trade; peripheral setting in the Device Configurator or directly from the Tools section in the IDE Quick Panel.
+   You can launch the **CAPSENSE&trade; Configurator** tool in Eclipse IDE for ModusToolbox&trade; from the CAPSENSE&trade; peripheral setting in the **Device Configurator** or directly from the **BSP Configurators** section in the IDE **Quick Panel**.
 
    You can also launch it in standalone mode from *{ModusToolbox&trade; install directory}/ModusToolbox&trade;/tools_{version}/capsense-configurator/capsense-configurator*. In this case, after opening the application, select **File** > **Open** and open the *design.cycapsense* file of the respective application, which is present in the *{Application root directory}/bsps/TARGET_APP_\<BSP-NAME>/COMPONENT_BSP_DESIGN_MODUS* folder.
 
@@ -363,153 +367,127 @@ Do the following to tune the proximity widget:
 
 5. In the **Basic** tab, add a proximity widget **Proximity0** and a low-power widget **LowPower0**. Set their sensing mode as CSD RM (self-cap) and set the **CSD tuning mode** as **Manual tuning**.
 
-   **Figure 12. CAPSENSE&trade; Configurator - Basic tab**
+   **Figure 11. CAPSENSE&trade; Configurator - Basic tab**
 
-   <img src="images/basic-csd-settings.png" alt="Figure 12"/>
+   <img src="images/basic-csd-settings.png" alt="Figure 11" width="800"/>
 
 6. Do the following in the **General** tab under the **Advanced** tab:
 
-   1. Select **CAPSENSE&trade; IMO Clock frequency** as **46** MHz.
+   **Table 3. Widget details**
 
-   2. Set the **Modulator clock divider** to **1** to obtain the optimum modulator clock frequency. 
+   Parameter | Setting | Comment
+   :-------- |:----------- |:-----------
+   CAPSENSE&trade; IMO Clock frequency | 46 | Frequency of clock used as source for the CAPSENSE™ peripheral
+   Modulator clock divider | 1 | Set to obtain the optimum modulator clock frequency
+   Number of init sub-conversions | 3 | Set to ensure proper initialization of CAPSENSE™.
+   Wake-on-Touch scan interval (us) | 62500 |It is set based on the required low-power state scan refresh rate. For example, to get a 16-Hz refresh rate, set the value to 62500 
+   Number of frames in Wake-on-Touch | 160 |This determines the maximum time the device will be kept in the lowest-power mode (WoT timeout) if there is no user activity. The maximum time can be calculated using **Equation 1**.
 
-   3. Set the **Number of init sub-conversions** based on the hint shown when you hover over the edit box. Retain the default value (which will be set in [Stage 2: Set sense clock frequency](#stage-2-set-sense-clock-frequency)).
+   **Equation 1:** 
 
-   4. Use **Wake-On-Touch settings** to set the refresh rate and frame timeout while in the lowest power mode (Wake-on-Touch mode).
-
-   5. Set **Wake-on-Touch scan interval (ms)** based on the required low-power state scan refresh rate. For example, to get a 16-Hz refresh rate, set the value to **62500**.
-
-   6. Set the **Number of frames in Wake-on-Touch** as the maximum number of frames to be scanned in WoT mode if there is no touch detected. This determines the maximum time the device will be kept in the lowest-power mode if there is no user activity. The maximum time can be calculated by multiplying this parameter with the **Wake-on-Touch scan interval (µs)** value.
-
-      For example, to get 10 seconds as the maximum time in WoT mode, set **Number of frames in Wake-on-Touch** to **160** for the scan interval set as 62500 µs.
-
-       **Note:** For tuning low-power widgets, **Number of frames in Wake-on-Touch** must be less than the  **Maximum number of raw counts values in SRAM** based on the number of sensors in WoT mode as follows:
-
-      **Table 2. Maximum number of raw counts values in SRAM**
+   <img src="images/wot_timeout.png" width="400"/>
 
 
-       Number of low power widgets  | Maximum number of raw counts in SRAM  |
-      :---------------------| :-----|
-       1  | 245 |
-       2  | 117 |
-       3  | 74 |
-       4  | 53 |
-       5  | 40 |
-       6  | 31 |
-       7  | 25 |
-       8  | 21 |
-       
-       <br>
+   > **Note:**  For tuning low-power widgets, Number of frames in Wake-on-Touch must be less than the Maximum number of Frames. This is calculated based on the number of sensors in WoT mode and SRAM size. Exceeding this overwrite the previous rawcounts of the frame.
 
-   7. Retain the default settings for all regular and low-power widget filters. You can enable or update the filters later depending on the signal-to-noise ratio (SNR) requirements in [Stage 3: Fine-tune for required SNR, power, and refresh rate](#stage-3-fine-tune-for-required-snr-power-and-refresh-rate).
-
-      Filters are used to reduce the peak-to-peak noise; however, using filters will result in a higher scan time.
-
-   **Figure 13. CAPSENSE&trade; Configurator - General settings**
-
-   <img src="images/advanced-general-settings.png" alt="Figure 13"/>
-
-   **Note:** Each tab has a **Restore Defaults** button to restore the parameters of that tab to their default values.
-
-7. Go to the **CSD Settings** tab and make the following changes:
-
-   1. Set **Inactive sensor connection** as **Shield**.
-
-      Connect the inactive sensor, hatch pattern, or any trace that is surrounding the proximity sensor to the driven shield instead of connecting them to ground. This minimizes the signal due to the liquid droplets falling on the sensor. 
-
-   2. Set **Shield mode** as **Active**.
-
-      Setting the shield to active: The driven shield is a signal that replicates the sensor-switching signal. This minimizes the signal because of the liquid droplets falling on the sensor. 
-
-   3. Set **Total shield count** as **10** (Enabling all the inactive sensors as shield during CSD sensor scan).
-
-   4. Select **Enable CDAC auto-calibration** and **Enable compensation CDAC**.
-
-   5. Set **Raw count calibration level (%)** to **70**.
-
-   6. Select **Enable CDAC dither**.
-
-      This helps in removing flat spots by adding white noise that moves the conversion point around the flat-spots region. See the [CAPSENSE&trade; design guide](https://www.infineon.com/AN85951) for more information.
-
-   **Figure 14. CAPSENSE&trade; Configurator - Advanced CSD settings**
-
-   <img src="images/advanced-csd-settings.png" alt="Figure 14" width="500"/>
-
-8. Go to the **Widget Details** tab.
+   **Table 4. Maximum number of raw counts values in SRAM**
 
 
-   Select **Proximity0** from the left pane and then set the following:
-
-   - **Sense clock divider:** Retain the default value (will be set in [Stage 2:  Set sense clock frequency](#stage-2-set-sense-clock-frequency))
-
-   - **Clock source:** Direct
-
-       **Note:** Spread spectrum clock (SSC) or PRS clock can be used as a clock source to deal with EMI/EMC issues.
-
-   - **Number of sub-conversions:** 60
-
-     60 is a good starting point to ensure a fast scan time and sufficient signal. This value will be adjusted as required in [Stage 3: Fine-tune for required SNR, power, and refresh rate](#stage-3-fine-tune-for-required-snr-power-and-refresh-rate).
-
-   - **Proximity threshold:** 65535
-
-      Proximity threshold is set to the maximum to avoid waking the device up from WoT mode because of touch detection; this is required to find the signal and SNR. This will be adjusted in [Stage 4: Tune threshold parameters](#stage-4-tune-threshold-parameters).
-      
-   - **Touch threshold:** 65535
-
-      Touch threshold is also set to the maximum to avoid the waking up of the device from WoT mode.
-
-   - **Noise threshold:** 40
-
-   - **Negative noise threshold:** 40
-
-   - **Low baseline reset:** 65535
-      
-      Low baseline reset is set to 65535 so that the baseline does not reset at all because of abnormal dips in raw count.
-
-   - **Hysteresis:** 40
-
-   - **ON debounce:** 3
-
-   **Figure 15. CAPSENSE&trade; Configurator - Proximity Widget Details tab under the Advanced tab**
-
-   <img src="images/advanced-widget-settings_proximity.png" alt="Figure 15" />
-
-9. Go to the **Scan Configuration** tab to select the pins and scan slots. Do the following:
-
-   1. Configure the pins for electrodes using the drop-down menu.
-
-   2. Configure the scan slots using the **Auto-assign slots** option. The other option is to allot each sensor a scan slot based on the entered slot number.
-
-   3. Select Proximity0_Sns0 as **Ganged** under the **LowPower0** widget as shown in **Figure 16**.
-
-   4. Check the notice list for warnings or errors.
-
-   **Figure 16. Scan Configuration tab**
-
-   <img src="images/scan-configuration.png" alt="Figure 16"/>
-
-10. Click **Save** to apply the settings.
-
-See the [CAPSENSE&trade; design guide](https://www.infineon.com/AN85951) for detailed information on tuning parameters.
-
-### Stage 2: Set sense clock frequency
--------------------------
-The sense clock is derived from the modulator clock using a clock-divider and is used to scan the sensor by driving the CAPSENSE&trade; switched capacitor circuits. Both the clock source and clock divider are configurable.
-
-Select the maximum sense clock frequency such that the sensor and shield capacitance are charged and discharged completely in each cycle. This can be verified using an oscilloscope and an active probe. To view the charging and discharging waveforms of the sensor, probe at the sensor (or as close as possible to the sensors), and not at the pins or resistor. 
-
-**Figure 21**  shows proper charging when the sense clock frequency is correctly tuned, i.e., the voltage is settling to the required voltage at the end of each phase. **Figure 22** shows incomplete settling (charging/discharging) and therefore, the sense clock divider is set to 28 as shown in **Figure 21**.
-
-
-   **Figure 21. Proper charge cycle of a sensor**
-
-   <img src="images/csdrm-waveform.png" alt="" width="400"/>
+   Number of low power widgets  | Maximum number of raw counts in SRAM  
+   :----------------------------| :-----------------------------------
+      1  | 245 |
+      2  | 117 |
+      3  | 74 |
+      4  | 53 |
+      5  | 40 |
+      6  | 31 |
+      7  | 25 |
+      8  | 21 |
 
    <br>
 
-   **Figure 22. Improper charge cycle of a sensor**
+7. Retain the default settings for all regular and low-power widget filters. You can enable or update the filters later depending on the signal-to-noise ratio (SNR) requirements in [Stage 4: Fine-tune for required SNR, power, and refresh rate](#stage-3-fine-tune-for-required-snr-power-and-refresh-rate).
 
-   <img src="images/csdrm-waveform_improper.png" alt="" width="400"/>
+      Filters are used to reduce the peak-to-peak noise; however, using filters will result in a higher scan time.
+
+   **Figure 12. CAPSENSE&trade; Configurator - General settings**
+
+   <img src="images/advanced-general-settings.png" alt="Figure 12" width="800"/>
+
+   > **Note:** Each tab has a **Restore Defaults** button to restore the parameters of that tab to their default values.
+
+8. Go to the **CSD Settings** tab and make the following changes:
+
+   **Table 5. Scan setting**
+
+   Parameter | CY8CPROTO-040T | CY8CPROTO-041TP |Comment
+   :-------- |:----------- |:----------- |:-----------
+   Inactive sensor connection | Shield |Shield| Connects the inactive sensors ( configured sensors which are not scanned in a given scan-slot ) to the driven shield.
+   Shield mode | Active | Active|The driven shield is a signal that replicates the sensor-switching signal. It helps to reduce sensor parasitic capacitance. 
+   Total shield count | 10 |10|  Selects the number of shield electrodes used in the design. Most designs work with one dedicated shield electrode, but some designs require multiple dedicated shield electrodes to ease the PCB layout routing or to minimize the PCB area used for the shield layer.
+   Raw count calibration level (%) | 70 |85 | If the sensor raw count saturates (equals max raw count) on touch, reduce the raw count calibration level(%). This will prevent raw count saturation.
+
+
+   **Figure 13. CAPSENSE&trade; Configurator - Advanced CSD settings**
+
+   <img src="images/advanced-csd-settings.png" alt="Figure 13" width="800"/>
+
+9. Go to the **Widget Details** tab.
+
+   Select **Proximity0** from the left pane and then set the following:
+
+   **Table 6. Initial widget parameter setting**
+
+   Parameter | Setting | Comment
+   :-------- |:----------- |:-----------
+   Sense clock divider | Default | Value will be set in [Stage 2:  Set sense clock frequency](#stage-2-set-sense-clock-frequency)
+   Clock source | Direct | Direct clock is a constant frequency sense clock source. When you chose this option, the sensor pin switches with a constant frequency
+   Number of sub-conversions | 60 | Good starting point to ensure a fast scan time and sufficient signal. This value will be adjusted as required in [Stage 4: Fine-tune for required SNR, power, and refresh rate](#stage-3-fine-tune-for-required-snr-power-and-refresh-rate)
+   Proximity threshold | 65535 |It is set to the maximum to avoid waking the device up from WoT mode because of touch detection; this is required to find the signal and SNR. This will be adjusted in [Stage 5: Tune threshold parameters](#stage-4-tune-threshold-parameters)
+   Touch threshold | 65535 |It is also set to the maximum to avoid the waking up of the device from WoT mode.
+   Noise threshold |60 |Baseline is not updated when raw count is above baseline + Noise threshold.
+   Negative noise threshold |60 |Baseline is not updated when raw count is below baseline - Negative noise threshold.
+   Low baseline reset | 255 |If raw count is lower than the Negative Noise Threshold for this many samples, baseline is reset to current raw count.
+   Hysteresis | 15 |Prevents sensor status toggling due to system noise.
+   ON debounce | 3 |Number of consecutive scans during which a sensor must be active so that a touch is reported.
+
+   **Figure 14. CAPSENSE&trade; Configurator - Proximity Widget Details tab under the Advanced tab**
+
+   <img src="images/advanced-widget-settings_proximity.png" alt="Figure 14" width="800"/>
+
+10. Go to the **Scan Configuration** tab to select the pins and scan slots. Do the following:
+
+      1. Configure the pins for electrodes using the drop-down menu.
+
+      2. Configure the scan slot using the **Auto-Assign Slots** option or enter a slot number for each each sensor. 
+
+      3. Select Proximity0_Sns0 as **Ganged** under the **LowPower0** widget as shown in **Figure 15**.
+
+      4. Check the notice list for warnings or errors.
+
+         **Figure 15. Scan Configuration tab**
+
+         <img src="images/scan-configuration.png" alt="Figure 15" width="800"/>
+
+11. Click **Save** to apply the settings.
+
+      See the [CAPSENSE&trade; design guide](https://www.infineon.com/AN85951) for detailed information on tuning parameters.
+
+### Stage 2: Set sense clock frequency
+-------------------------
+The sense clock is derived from the modulator clock using a sense clock-divider and is used to scan the sensor by driving the CAPSENSE&trade; switched capacitor circuits. Both the clock source and clock divider are configurable. The sense clock divider should be configured such that the pulse width of the sense clock is long enough to allow the sensor capacitance to charge and discharge completely. This is verified by observing the charging and discharging waveforms of the sensor using an oscilloscope and an active probe. The sensors should be probed close to the electrode and not at the sense pins or the series resistor. 
+
+See **Figure 16** and **Figure 17** for waveforms observed on the shield. **Figure 16** shows proper charging when the sense clock frequency is correctly tuned. The pulse width is at least 5 Tau, i.e., the voltage is reaching at least 99.3% of the required voltage at the end of each phase. **Figure 17** shows incomplete settling (charging/discharging).
+
+
+   **Figure 16. Proper charge cycle of a sensor**
+
+   <img src="images/csdrm-waveform.png" alt="" width="500"/>
+
+
+   **Figure 17. Improper charge cycle of a sensor**
+
+   <img src="images/csdrm-waveform_improper.png" alt="" width="500"/>
    
    To set the proper sense clock frequency, follow these steps:
 
@@ -519,32 +497,49 @@ Select the maximum sense clock frequency such that the sensor and shield capacit
 
    3. If the charging is incomplete, increase the sense clock divider. Do this in CAPSENSE&trade; Tuner by selecting the sensor and editing the sense clock divider parameter in the **Widget/Sensor Parameters** panel.
 
-       **Note:** 
-      - The sense clock divider should be **divisible by 4**. This ensures that all four scan phases have equal durations. 
-      - After editing the value, click the **Apply to Device** button and observe the waveform again. Repeat this until complete settling is observed.  
-      - Using a passive probe will add an additional parasitic capacitance of around 15 pF; therefore, should be considered during the tuning.
-
-
+       > **Note:** 
+       > - The sense clock divider should be **divisible by 4**. This ensures that all four scan phases have equal durations. 
+       > - After editing the value, click the **Apply to Device** button and observe the waveform again. Repeat this until complete settling is observed.  
+       > - Using a passive probe will add an additional parasitic capacitance of around 15 pF; therefore, should be considered during the tuning.
       
    4. Click the **Apply to Project** button so that the configuration is saved to your project. 
 
-      **Figure 23. Sense clock divider setting**
+      **Figure 18. Sense clock divider setting**
 
-      <img src="images/sense-clock-divider-setting.png" alt="Figure 23" width="300"/>
+      <img src="images/sense-clock-divider-setting.png" alt="Figure 18" width="500"/>
       
 
    5. Repeat this process for all the sensors and the shield. Each sensor may require a different sense clock divider value to charge/discharge completely. But all the sensors which are in the same scan slot need to have the same sense clock source, sense clock divider, and number of sub-conversions. Therefore, take the largest sense clock divider in a given scan slot and apply it to all the other sensors that share that slot.
 
-      **Table 5. Sense clock parameters obtained based on sensors for CY8CPROTO-040T kit**
+      **Table 7. Sense clock divider settings obtained for supported kits**
 
-      Parameter | Value 
-      :-------- |:-----------
-      Modulator clock divider | 1 
-      Sense clock divider | 28 
+      Parameter |CY8CPROTO-040T|CY8CPROTO-041TP
+      :-------- |:----------- |:-----------
+      Sense clock divider | 28  |20
       
       <br>
 
-### Stage 3: Fine-tune for required SNR, power, and refresh rate
+### **Stage 3: Measure sensor capacitance to set CDAC tuning mode**
+------------
+
+Generally CDAC tuning mode is recommended to be set to Auto, however the appropriate tuning mode to use has some dependency on the sensor parasitic capacitance (Cp).
+ 
+ 
+In order to avoid signal variation across devices in production, PSOC 4100T Plus devices have CDAC trim codes in SFLASH (read-only). This code is used to scale the Reference CDAC and Fine CDAC parameters, which compensates for variations in the CDAC and brings down the overall signal variation across units.
+
+This trimming is applicable only in the following scenarios,
+- Only for CSD widgets (Regular and Low power).
+- Sensor Cp is less than 4pF.
+- Reference CDAC and Fine CDAC are set to 'Manual' mode.
+
+
+   >   **Note:** 
+   Select CDAC tuning mode 'Auto', if sensor Cp is above 4pF. Also for sensing methods other than CSD.
+
+>  **Note:** To determine the applicable CDAC tuning mode for configuration in this code example, measure the sensor parasitic capacitance (Cp). If Cp is less than 4pF, reference CDAC and fine CDAC should be configured to 'Manual' mode. Refer to the [PSOC&trade; 4: MSCLP low-power self-capacitance button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button) code example for the procedure to measure Cp and for the steps to configure the CDACs manually.
+
+
+### Stage 4: Fine-tune for required SNR, power, and refresh rate
 -------------------------
 The sensor should be tuned to have a minimum SNR of 5:1 and a minimum signal of 50 to ensure reliable operation. The sensitivity can be increased by increasing number of sub-conversions and noise can be decreased by enabling available filters. 
 
@@ -552,13 +547,11 @@ The steps for optimizing these parameters are as follows:
 
 1. Measure the SNR as mentioned in the [Operation](#operation) section.
 
-   Measure the SNR by placing your hand above the proximity loop at maximum proximity height (35 mm in this case).
-
 2. If the SNR is less than 5:1 increase the number of sub-conversions. Edit the number of sub-conversions (N<sub>sub</sub>) directly in the **Widget/Sensor parameters** tab of the CAPSENSE&trade; Tuner.
 
    **Note:** Number of sub-conversion should be greater than or equal to 8.
 
-3. PSoC&trade; 4000T CAPSENSE&trade; has a built-in CIC2 filter which increases the resolution for the same scan time. This example has the CIC2 filter enabled.
+3. PSOC&trade; 4 CAPSENSE&trade; devices with MSCLP have a built-in CIC2 filter. wEnabling the CIC2 filter increases the resolution while maintaining the same scan time.
 
 4.  Load the parameters to the device and measure SNR as mentioned in steps 10 and 11 in the [Monitor data using the Tuner Application](#monitor-data-using-the-tuner-application) section. 
    
@@ -576,120 +569,102 @@ The steps for optimizing these parameters are as follows:
 
    a. Open **CAPSENSE&trade; Configurator** from ModusToolbox&trade; **Quick Panel** and select the appropriate filter.
 
-      **Figure 24. Filter settings in CAPSENSE&trade; Configurator**
+      **Figure 19. Filter settings in CAPSENSE&trade; Configurator**
 
-      <img src="images/advanced-filter-settings.png" alt="Figure 24"/>
+      <img src="images/advanced-filter-settings.png" alt="Figure 19" width="800"/>
 
-      **Note** : Add the filter based on the type of noise in your measurements. See [ModusToolbox&trade; CAPSENSE&trade; Configurator user guide](https://www.infineon.com/ModusToolboxCapSenseConfig) for details.
+      > **Note** : Enable the filter based on the type of noise in your system. For Filter Descriptions refer to **Table 8** and See [AN85951 – PSOC&trade; 4 and PSOC&trade; 6 MCU CAPSENSE&trade; design guide](https://www.infineon.com/AN85951) for more details.
+
+      **Table 8. Filters Description**
+
+      Filter   | Description
+      :---------------------| :----------------- 
+      Median  | Eliminates noise spikes from motors and switching power supplies
+      Average  | Eliminates periodic noise (for example, from power supplies)
+      First Order IIR | Software filter which eliminates high frequency Noise, Low coefficient results in lower noise but slows down response. 
+      Hardware IIR | Eliminate high frequency Noise, Low coefficient means lower filtering, while higher response time.
+
 
    b. Click **Save** and close CAPSENSE&trade; Configurator. Program the device to update the filter settings.
 
-    **Note** : Increasing number of sub-conversions and enabling filters increases the scan time which in turn decreases the responsiveness of the sensor. Increase in scan time also increases the power consumption. Therefore, the number of sub-conversions and filter configuration must be optimized to achieve a balance between SNR, power, and refresh rate. 
+    > **Note** : Increasing number of sub-conversions and enabling filters increases the scan time which in turn decreases the responsiveness of the sensor. Increase in scan time also increases the power consumption. Therefore, the number of sub-conversions and filter configuration must be optimized to achieve a balance between SNR, power, and refresh rate. 
 
-### Stage 4: Tune threshold parameters
+### Stage 5: Tune threshold parameters
 -------------------------
 Various thresholds, relative to the signal, need to be set for each sensor. Do the following in CAPSENSE&trade; Tuner to set up the thresholds for a widget:
 
 1. Switch to the **Graph View** tab and select **Proximity0**.
 
-2. Place your hand at 40 mm directly above the proximity sensor and monitor the touch signal in the **Sensor signal** graph, as shown in **Figure 25**. 
+2. Place your hand at maximum distance of the proximity sensor as mentioned in **Table 2** directly above the proximity sensor and monitor the touch signal in the **Sensor signal** graph, as shown in **Figure 20**. 
 
-   **Figure 25. Sensor signal when hand is in the proximity of the sensor**
+   **Figure 20. Sensor signal when hand is in the proximity of the sensor**
 
-   <img src="images/tuner-threshold-settings.png" alt="Figure 25"/>
+   <img src="images/tuner-threshold-settings.png" alt="Figure 20" width="800"/>
 
-3. Note the signal measured and set the thresholds according to the following recommendations:
+3. Note the signal measured for required proximity distance and for touch. The respective signals observed for supported kits is shown in **Table 9**. Set the thresholds according to the recommendations given in **Table 10**:.
 
-   - **Proximity threshold** = 80% of the signal
+      **Table 9. Measured signal**
 
-   - **Proximity touch threshold** = 80% of the signal
+      Parameter   | Proximity0 (CY8CPROTO-040T) | Proximity0 (CY8CPROTO-041TP)
+      :---------------------|  :-----| :-----|
+      Proximity signal  |150 | 187 |
+      Touch signal  |3125 | 4700  |
 
-     Here, the touch threshold denotes the threshold for the proximity sensor to detect a touch when it is touched by a finger. When the proximity sensor is touched, the sensor yields a higher signal compared the proximity signal; therefore, it is the **touch signal**. To measure the touch signal count, touch the sensor and monitor the signal in the **Sensor signal** graph.
 
-   - **Noise threshold** = 40% of the signal
+      **Table 10. Settings for parameters related to touch/proximity detection**
 
-   - **Negative noise threshold** = 40% of the signal
+      Parameter  | CY8CPROTO-040T |  CY8CPROTO-041TP | Remark 
+      :---------------------| :-----| :-----| :-----|
+      Proximity threshold | 120 |150| 80% of the proximity signal 
+      Proximity touch threshold | 2500|3760 | 80% of the touch signal 
+      Noise threshold  | 60|75| 40% of the proximity signal 
+      Negative noise threshold  | 60|75 | 40% of the proximity signal 
+      Hysteresis  | 15| 15| 10% of proximity signal 
+      Low baseline reset  | 255| | 30 (by default) 
+      ON debounce  | 3 | 3|Default
 
-   - **Hysteresis** = 10% of signal
-
-   - **Low baseline reset** = 30 (by default)
-
-   - **Hysteresis** = 10% of the signal
-
-   - **ON debounce** = 3
-
+      Here, the proximity touch threshold denotes the threshold for the proximity sensor to detect a touch when it is touched by a finger. When the proximity sensor is touched, the sensor yields a higher signal compared the proximity signal; therefore, it is the **touch signal**. To measure the touch signal count, touch the sensor and monitor the signal in the **Sensor signal** graph.
 
 3. Apply the settings to the device by clicking **To device**.
 
-   **Figure 26. Apply settings to device**
+   **Figure 21. Apply settings to device**
 
-   <img src="images/tuner-apply-settings-device.png" alt="Figure 26"/>
+   <img src="images/tuner-apply-settings-device.png" alt="Figure 21" width="400"/>
 
-   If your sensor is tuned correctly, you will observe that the proximity status goes from `0` to `1` in the **Status** sub-window of the **Graph View** window as **Figure 27** shows. The successful tuning of the proximity sensor is also indicated by LED3 in the kit; it turn ON when the hand comes closer than the maximum distance and turn OFF when the hand is moved away from the proximity sensor.
+   If your sensor is tuned correctly, the proximity status changes from `0` to `1` in the **Status** sub-window of the **Graph View** window as **Figure 22** shows. The successful tuning of the proximity sensor is also indicated by LED (refer **Table 2**) in the kit; it turns ON when the hand comes closer than the maximum distance and turns OFF when the hand is moved away from the proximity sensor.
 
-   **Figure 27. Sensor status in CAPSENSE&trade; Tuner showing proximity status**
+   After touching the proximity loop, a further change in status from `1` to `3` can be observed which indicates a touch.
 
-   <img src="images/tuner-status.png" alt="Figure 27"/>
+   **Figure 22. Sensor status in CAPSENSE&trade; Tuner showing proximity and touch status**
 
-   After touching the proximity loop, a further change in status from `1` to `3` can be observed which indicates a touch. Along with this, LED1 will turn ON in blue color.
+   <img src="images/tuner-status-touch.png" alt="Figure 22" width="800"/>
 
-   **Figure 28. Sensor status in CAPSENSE&trade; Tuner showing touch status**
-
-   <img src="images/tuner-status-touch.png" alt="Figure 28"/>
-
-7. Click **Apply to Project** as shown in **Figure 29**. The change is updated in the *design.cycapsense* file. 
+7. Click **Apply to Project** as shown in **Figure 23**. The change is updated in the *design.cycapsense* file. 
    
    Close **CAPSENSE&trade; Tuner** and launch **CAPSENSE&trade; Configurator**. You should now see all the changes that you made in the CAPSENSE&trade; Tuner reflected in the **CAPSENSE&trade; Configurator**.
 
-   **Figure 29. Apply settings to Project**
+   **Figure 23. Apply settings to Project**
 
-   <img src="images/tuner-apply-settings-project.png" alt="Figure 29"/>
-
-   <br>
-
-   **Table 6. Tuning parameters obtained based on sensors for CY8CPROTO-040T kit**
-
-   Parameter | Proximity0 
-   :-------- |:-----------
-   Proximity signal | 150
-   Touch signal | 3125 
-   Proximity threshold | 120 
-   Touch threshold | 2500
-   Noise threshold |60
-   Negative noise threshold |60 
-   Low baseline reset | 255 
-   Hysteresis | 15 
-   ON debounce | 3
+   <img src="images/tuner-apply-settings-project.png" alt="Figure 23" width="400"/>
    
    <br>
 
    </details>
 
-<br>
-
-## Tuning parameters
-
-This code example explains the tuning procedure for the proximity widget. See the [PSoC™ 4: MSCLP low-power CSD button](https://github.com/Infineon/mtb-example-psoc4-msclp-low-power-csd-button) for tuning the low-power widget.
-
 ## Debugging
 
+You can debug this project to step through the code. In the IDE, use the **\<Application Name> Debug (KitProg3_MiniProg4)** configuration in the **Quick Panel**. For details, see the "Program and debug" section in the [Eclipse IDE for ModusToolbox&trade; user guide](https://www.infineon.com/MTBEclipseIDEUserGuide).
 
-You can debug the example to step through the code.
+To enable the debug option, see the [Setup VDDA and Debug mode](#set-up-the-vdda-supply-voltage-and-debug-mode-in-device-configurator) section. To achieve lower power consumption, it is recommended to disable it when not debugging.
 
+see, **Table 11** for the default debug configuration in the supported kits,
 
-<details><summary><b>In Eclipse IDE</b></summary>
+**Table 11. Debug mode option status**
 
-Use the **\<Application Name> Debug (KitProg3_MiniProg4)** configuration in the **Quick Panel**. For details, see the "Program and debug" section in the [Eclipse IDE for ModusToolbox&trade; user guide](https://www.infineon.com/MTBEclipseIDEUserGuide).
-
-
-</details>
-
-
-<details><summary><b>In other IDEs</b></summary>
-
-Follow the instructions in your preferred IDE.
-
-</details>
+   Kit  | Debug mode 
+   :----| :----------
+   CY8CPROTO-040T | Disabled
+   CY8CPROTO-041TP | Enabled
 
 ## Design and implementation
 
@@ -703,23 +678,22 @@ See the [Tuning procedure](#tuning-procedure) section for step-by-step instructi
 
 The project uses the [CAPSENSE&trade; middleware](https://infineon.github.io/capsense/capsense_api_reference_manual/html/index.html); see the [ModusToolbox&trade; user guide](https://www.infineon.com/ModusToolboxUserGuide) for more details on selecting a middleware.
 
-See [AN85951 – PSoC&trade; 4 and PSoC&trade; 6 MCU CAPSENSE&trade; design guide](https://www.infineon.com/an85951) for more details of CAPSENSE&trade; features and usage.
+See [AN85951 – PSOC&trade; 4 and PSOC&trade; 6 MCU CAPSENSE&trade; design guide](https://www.infineon.com/an85951) for more details of CAPSENSE&trade; features and usage.
 
-The design also has an EZI2C peripheral and a PWM controlled LED. The EZI2C slave peripheral is used to monitor the information of sensor raw and processed data on a PC using the CAPSENSE&trade; Tuner available in the Eclipse IDE for ModusToolbox&trade; via I2C communication.
+The design also has an EZI2C peripheral and a PWM controlled LED. The EZI2C slave peripheral is used to monitor sensor data on a computer using the CAPSENSE&trade; Tuner available in the Eclipse IDE for ModusToolbox&trade; via I2C communication.
 
 The PWM pin is used to control the brightness and ON/OFF operation of the LED. 
 
 The firmware is designed to support the following application states:
 
-- Active state
-- Active low-refresh rate state
-- Wake-on-touch state
+- Active state (128 Hz)
+- Active low-refresh rate state (32 Hz)
+- Wake-on-touch state (16 Hz)
 
-   **Figure 30. Firmware state-machine**
+   **Figure 24. Firmware state-machine**
 
-   <img src="images/psoc_4000t_simple_state_machine.png" alt="Figure 30" width="400"/>
+   <img src="images/psoc_4000t_simple_state_machine.png" alt="Figure 24" width="400"/>
 
-   <br>
 
 The firmware state machine and the operation of the device in four different states are explained in the following steps:
 
@@ -731,67 +705,65 @@ The firmware state machine and the operation of the device in four different sta
 
    2. During the ongoing scan operation, the CPU moves to the Deep Sleep state.
 
+      > **Note:**  PWM is not available in Deep Sleep. Hence, with the PWM-based LEDs enabled, the application moves the CPU in to Sleep mode instead of Deep Sleep mode. To achieve the lowest power possible, set the #define ENABLE_PWM_LED macro to (0u) in *main.c*.
+      
+
    3. The interrupt generated on scan completion wakes the CPU which processes the sensor data and transfers the data to CAPSENSE&trade; Tuner through EZI2C.
 
    4. Turn ON the corresponding LEDs with specific brightness to indicate the specific proximity or touch detection.
 
-   In Active state, a scan of the selected sensors happen with the highest refresh rate of 128 Hz.
+      In Active state, a scan of the selected sensors happens with the highest refresh rate.
 
-3. Enters the Active low-refresh rate state when there is no touch or object in proximity detected for a timeout period. In this state, selected sensors are scanned with a lower refresh rate of 32 Hz. Because of this, power consumption in the Active low-refresh rate state is lower compared to the Active state. The state machine returns to the Active state if there is touch or object in proximity detected by the sensor.
+3. Enter the Active low-refresh rate state when there is no touch or object in proximity detected for a timeout period. In this state, selected sensors are scanned with a lower refresh rate. Because of this, power consumption in the Active low-refresh rate state is lower compared to the Active state. The state machine returns to the Active state if there is touch or object in proximity detected by the sensor.
 
-4. Enters the Wake-on-Touch state when there is no touch or object in proximity detected in Active low-refresh rate state for a timeout period. In this state, the CPU is set to deep sleep, and is not involved in CAPSENSE&trade; operation. This is the lowest power state of the device. In the Wake-on-Touch state, the CAPSENSE&trade; hardware executes the scanning of the selected sensors called "low-power widgets" and processes the scan data for these widgets. If touch is detected, the CAPSENSE&trade; block wakes up the CPU and the device enters to the Active state.
-
-In the [PSoC&trade; 4000T CAPSENSE&trade; Prototyping Kit](https://www.infineon.com/CY8CPROTO-040T), there are two onboard LEDs connected to PWM pins on the device. Therefore, the brightness and ON/OFF status of these LEDs can be controlled.
-
-### Firmware flow
-
-   **Figure 31. Firmware flowchart**
-
-<img src="images/firmware-flowchart.png" alt="Figure 31" width="800"/>
-
-<br>
+4. Enter the Wake-on-Touch state when there is no touch or object in proximity detected in Active low-refresh rate state for a timeout period. In this state, the CPU is set to deep sleep, and is not involved in CAPSENSE&trade; operation. This is the lowest power state of the device. In the Wake-on-Touch state, the CAPSENSE&trade; hardware executes the scanning of the selected sensors called "low-power widgets" and processes the scan data for these widgets. If touch is detected, the CAPSENSE&trade; block wakes up the CPU and the device enters to the Active state.
 
 ### Set up the VDDA supply voltage and debug mode in Device Configurator
 
 1. Open Device Configurator from the **Quick Panel**.
 
-2. Go to the **System** tab. Select the **Power** resource, and set the VDDA value under **Operating conditions** as shown in **Figure 32**.
+2. Go to the **System** tab. Select the **Power** resource, and set the VDDA value under **Operating conditions** as shown in **Figure 25**.
 
-   **Figure 32. Setting the VDDA supply in the System tab of Device Configurator**
+   **Figure 25. Setting the VDDA supply in the System tab of Device Configurator**
 
-   <img src="images/vdda-setting.png" alt="Figure 32"/>
+   <img src="images/vdda-setting.png" alt="Figure 25" width="800"/>
 
-3. By default, the debug mode is disabled for this application to reduce power consumption. Enable debug mode to enable SWD pins as shown in **Figure 33**.
+3. See Table 11 for the default debug configuration in the supported kits, Enable debug mode to enable SWD pins as shown in **Figure 26**.
 
-   **Figure 33. Enable debug mode in the System tab of Device Configurator**
+   **Figure 26. Enable debug mode in the System tab of Device Configurator**
 
-   <img src="images/debug.png" alt="Figure 33"/>
+   <img src="images/debug.png" alt="Figure 26" width="800"/>
 
-<br>
 
 ## Resources and settings
 
 
-   **Figure 34. EZI2C settings**
+   **Figure 27. EZI2C settings**
 
-<img src="images/ezi2c_setting.png" alt="Figure 34" width=""/>
+<img src="images/ezi2c_setting.png" alt="Figure 27" width="800"/>
 <br>
 
-**Figure 35. PWM settings**
+**Figure 28. PWM settings**
 
-<img src="images/pwm-setting.png" alt="Figure 35" width=""/>
+<img src="images/pwm-setting.png" alt="Figure 28" width="800"/>
+
 <br>
 
-**Table 7. Application resources**
+**Table 12. Application resources**
 
  Resource  |  Alias/object     |    Purpose     
  :------- | :------------    | :------------ 
- SCB (I2C) (PDL) | CYBSP_EZI2C          | EZI2C slave driver to communicate with CAPSENSE&trade; Tuner 
- SCB (SPI) (PDL) | CYBSP_MASTER_SPI          | SPI master driver to control serial LEDs 
+ SCB (I2C) (PDL) | CYBSP_EZI2C | EZI2C slave driver to communicate with CAPSENSE&trade; Tuner 
  CAPSENSE&trade; | CYBSP_MSC | CAPSENSE&trade; driver to interact with the MSC hardware and interface the CAPSENSE&trade; sensors 
- Digital pin | CYBSP_PWM | To show the proximity operation in the [PSoC&trade; 4000T CAPSENSE&trade; Prototyping Kit](https://www.infineon.com/CY8CPROTO-040T)
+ Digital pin | CYBSP_PWM | To show the proximity operation in the kits
 
 </details>
+
+### Firmware flow
+
+**Figure 29. Firmware flowchart**
+
+<img src="images/firmware-flowchart.png" alt="Figure 29" width="800"/>
 
 <br>
 
@@ -799,13 +771,13 @@ In the [PSoC&trade; 4000T CAPSENSE&trade; Prototyping Kit](https://www.infineon.
 
 Resources  | Links
 -----------|----------------------------------
-Application notes  | [AN79953](https://www.infineon.com/AN79953) – Getting started with PSoC&trade; 4 <br> [AN85951](https://www.infineon.com/AN85951) – PSoC&trade; 4 and PSoC&trade; 6 MCU CAPSENSE&trade; design guide <br> [AN234231](https://www.infineon.com/AN234231) – Achieving lowest-power capacitive sensing with PSoC&trade; 4000T <br> [AN92239](https://www.infineon.com/AN92239) – Proximity sensing with CAPSENSE&trade;
+Application notes  | [AN79953](https://www.infineon.com/AN79953) – Getting started with PSOC&trade; 4 <br> [AN85951](https://www.infineon.com/AN85951) – PSOC&trade; 4 and PSOC&trade; 6 MCU CAPSENSE&trade; design guide <br> [AN234231](https://www.infineon.com/AN234231) – PSOC&trade; 4 CAPSENSE&trade; ultra-low-power capacitive sensing techniques <br> [AN92239](https://www.infineon.com/AN92239) – Proximity sensing with CAPSENSE&trade;
 Code examples  | [Using ModusToolbox&trade;](https://github.com/Infineon/Code-Examples-for-ModusToolbox-Software) on GitHub
-Device documentation | [PSoC&trade; 4 datasheets](https://www.infineon.com/cms/en/search.html#!view=downloads&term=psoc4&doc_group=Data%20Sheet) <br>[PSoC&trade; 4 technical reference manuals](https://www.infineon.com/cms/en/search.html#!view=downloads&term=psoc4&doc_group=Additional%20Technical%20Information)
+Device documentation | [PSOC&trade; 4 datasheets](https://www.infineon.com/cms/en/search.html#!view=downloads&term=psoc4&doc_group=Data%20Sheet) <br>[PSOC&trade; 4 technical reference manuals](https://www.infineon.com/cms/en/search.html#!view=downloads&term=psoc4&doc_group=Additional%20Technical%20Information)
 Development kits | Select your kits from the [Evaluation board finder](https://www.infineon.com/cms/en/design-support/finder-selection-tools/product-finder/evaluation-board).
-Libraries on GitHub  | [mtb-pdl-cat2](https://github.com/Infineon/mtb-pdl-cat2) – PSoC&trade; 4 Peripheral Driver Library (PDL) <br>  [mtb-hal-cat2](https://github.com/Infineon/mtb-hal-cat2) – Hardware Abstraction Layer (HAL) library
-Middleware on GitHub  | [capsense](https://github.com/Infineon/capsense) – CAPSENSE&trade; library and documents <br> [psoc4-middleware](https://github.com/Infineon/modustoolbox-software#libraries) – Links to all PSoC&trade; 4 middleware
-Tools  | [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) – ModusToolbox&trade; software is a collection of easy-to-use libraries and tools enabling rapid development with Infineon MCUs for applications ranging from wireless and cloud-connected systems, edge AI/ML, embedded sense and control, to wired USB connectivity using PSoC&trade; Industrial/IoT MCUs, AIROC&trade; Wi-Fi and Bluetooth&reg; connectivity devices, XMC&trade; Industrial MCUs, and EZ-USB&trade;/EZ-PD&trade; wired connectivity controllers. ModusToolbox&trade; incorporates a comprehensive set of BSPs, HAL, libraries, configuration tools, and provides support for industry-standard IDEs to fast-track your embedded application development.
+Libraries on GitHub  | [mtb-pdl-cat2](https://github.com/Infineon/mtb-pdl-cat2) – PSOC&trade; 4 Peripheral Driver Library (PDL) <br>  
+Middleware on GitHub  | [capsense](https://github.com/Infineon/capsense) – CAPSENSE&trade; library and documents <br> [psoc4-middleware](https://github.com/Infineon/modustoolbox-software#libraries) – Links to all PSOC&trade; 4 middleware
+Tools  | [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) – ModusToolbox&trade; software is a collection of easy-to-use libraries and tools enabling rapid development with Infineon MCUs for applications ranging from wireless and cloud-connected systems, edge AI/ML, embedded sense and control, to wired USB connectivity using PSOC&trade; Industrial/IoT MCUs, AIROC&trade; Wi-Fi and Bluetooth&reg; connectivity devices, XMC&trade; Industrial MCUs, and EZ-USB&trade;/EZ-PD&trade; wired connectivity controllers. ModusToolbox&trade; incorporates a comprehensive set of BSPs, HAL, libraries, configuration tools, and provides support for industry-standard IDEs to fast-track your embedded application development.
 
 <br>
 
@@ -820,12 +792,15 @@ Infineon provides a wealth of data at [www.infineon.com](https://www.infineon.co
 
 ## Document history
 
-Document title: *CE238882* – *PSoC&trade; 4: MSCLP low-power proximity*
+Document title: *CE238882* – *PSOC&trade; 4: MSCLP low-power proximity*
 
  Version | Description of change
  ------- | ---------------------
  1.0.0   | New code example.
- 2.0.0   | Major update to support ModusToolbox&trade; v3.2 and CAPSENSE&trade; Middleware v5.0. This version is not backward compatible with previous versions of ModusToolbox&trade;  
+ 2.0.0   | Major update to support ModusToolbox&trade; v3.2 and CAPSENSE&trade; Middleware v5.0. This version is not backward compatible with previous versions of ModusToolbox&trade;
+ 2.1.0   | Added support for CY8CPROTO-041TP Prototyping Kit 
+ 3.0.0   | Major update to support ModusToolbox&trade; v3.3. This version is not backward compatible with previous versions of ModusToolbox&trade;
+ 4.0.0   | Major update to support ModusToolbox&trade; v3.5. This version is not backward compatible with previous versions of ModusToolbox&trade;   
 
  <br>
 
